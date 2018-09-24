@@ -1,0 +1,6 @@
+hit-test
+  extensions [hit]
+  O> create-turtles 2
+  [hit:ing? turtle 1] of turtle 0 => true
+  O> ask one-of turtles [fd 3]
+  [hit:ing? turtle 1] of turtle 0 => false
