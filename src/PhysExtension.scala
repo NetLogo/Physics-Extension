@@ -2,11 +2,10 @@ import org.nlogo.{agent, api, core, nvm}
 import core.Syntax
 import api.ScalaConversions._
 import api.{Argument, Context, ExtensionManager}
-import agent.Turtle
+import agent.{Patch, Turtle, World}
 import org.nlogo.core.AgentKind
 import java.lang.StrictMath
 
-import org.nlogo.agent.World
 import org.dyn4j.dynamics
 import org.dyn4j.dynamics.{Body, Force}
 import org.dyn4j.geometry.{Geometry, Mass, MassType, Vector2}
@@ -16,9 +15,11 @@ import scala.collection.mutable
 class PhysExtension extends api.DefaultClassManager {
   var world: dynamics.World = new dynamics.World()
   var turtlesToBodies: mutable.Map[Turtle, Body] = mutable.LinkedHashMap[Turtle, Body]()
+  var patchesToBodies: mutable.Map[Patch, Body] = mutable.LinkedHashMap[Patch, Body]()
 
   def load(manager: api.PrimitiveManager) = {
     manager.addPrimitive("set-physical", SetPhysical)
+    manager.addPrimitive("set-gravity", SetGravity)
     manager.addPrimitive("update", Update)
     manager.addPrimitive("forward", Forward)
 
@@ -34,33 +35,52 @@ class PhysExtension extends api.DefaultClassManager {
     world = new dynamics.World()
     world.getSettings.setRestitutionVelocity(0)
     world.setGravity(new Vector2(0,0))
+    turtlesToBodies.clear()
+    patchesToBodies.clear()
   }
 
   object SetPhysical extends api.Command {
-    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.BooleanType), agentClassString = "-T--")
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.BooleanType), agentClassString = "-TP-")
 
     override def perform(args: Array[Argument], context: Context): Unit = {
-      val turtle = context.getAgent.asInstanceOf[Turtle]
-      if (args(0).getBoolean) {
-        turtlesToBodies.getOrElseUpdate(turtle, {
-          val body = new Body()
-          val fixture = body.addFixture(Geometry.createCircle(turtle.size / 2))
-          fixture.setRestitution(1)
-          fixture.setFriction(0)
-          body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
-          body.getTransform.setRotation(StrictMath.toRadians(90 - turtle.heading))
-          body.setMass(MassType.NORMAL)
-          body.setAngularDamping(0)
-          body.setLinearDamping(0)
+      context.getAgent match {
+        case turtle: Turtle =>
+          if (args(0).getBoolean) {
+            turtlesToBodies.getOrElseUpdate(turtle, {
+              val body = new Body()
+              val fixture = body.addFixture(Geometry.createCircle(turtle.size / 2))
+              fixture.setRestitution(1)
+              fixture.setFriction(0)
+              body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
+              body.getTransform.setRotation(StrictMath.toRadians(90 - turtle.heading))
+              body.setMass(MassType.NORMAL)
+              body.setAngularDamping(0)
+              body.setLinearDamping(0)
+              body.setAutoSleepingEnabled(false)
 
-          world.addBody(body)
-          body
-        })
+              world.addBody(body)
+              body
+            })
 
-      }
-      else {
-        turtlesToBodies.remove(turtle).foreach(b => world.removeBody(b))
+          }
+          else {
+            turtlesToBodies.remove(turtle).foreach(b => world.removeBody(b))
 
+          }
+        case patch: Patch =>
+          if (args(0).getBoolean) {
+            patchesToBodies.getOrElseUpdate(patch, {
+              val body = new Body
+              val fixture = body.addFixture(Geometry.createSquare(1))
+              fixture.setFriction(0)
+              body.setMass(MassType.INFINITE)
+              body.getTransform.setTranslation(patch.pxcor, patch.pycor)
+              world.addBody(body)
+              body
+            })
+          } else {
+            patchesToBodies.remove(patch).foreach(b => world.removeBody(b))
+          }
       }
     }
   }
@@ -106,6 +126,13 @@ class PhysExtension extends api.DefaultClassManager {
     }
 
     override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType), agentClassString = "O---")
+  }
+
+  object SetGravity extends api.Command {
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType, Syntax.NumberType))
+
+    override def perform(args: Array[Argument], context: Context): Unit =
+      world.setGravity(new Vector2(args(0).getDoubleValue, args(1).getDoubleValue))
   }
 
   object Forward extends api.Command
