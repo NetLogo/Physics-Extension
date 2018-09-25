@@ -32,6 +32,7 @@ class PhysExtension extends api.DefaultClassManager {
   override def clearAll(): Unit = {
     super.clearAll()
     world = new dynamics.World()
+    world.getSettings.setRestitutionVelocity(0)
     world.setGravity(new Vector2(0,0))
   }
 
@@ -48,10 +49,9 @@ class PhysExtension extends api.DefaultClassManager {
           fixture.setFriction(0)
           body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
           body.getTransform.setRotation(StrictMath.toRadians(90 - turtle.heading))
-          val m = new Mass(new Vector2(0,0), 1,0)
-          m.setType(MassType.NORMAL)
-          body.setMass(m)
+          body.setMass(MassType.NORMAL)
           body.setAngularDamping(0)
+          body.setLinearDamping(0)
 
           world.addBody(body)
           body
@@ -63,7 +63,6 @@ class PhysExtension extends api.DefaultClassManager {
 
       }
     }
-
   }
 
   object Update extends api.Command {
@@ -115,8 +114,8 @@ class PhysExtension extends api.DefaultClassManager {
 
     override def perform(args: Array[Argument], context: Context): Unit = {
 
-      var turtle = context.getAgent.asInstanceOf[Turtle]
-      var amount = args(0).getDoubleValue
+      val turtle = context.getAgent.asInstanceOf[Turtle]
+      val amount = args(0).getDoubleValue
       turtlesToBodies(turtle).applyForce(new Force(turtle.dx * amount, turtle.dy * amount))
 
 
