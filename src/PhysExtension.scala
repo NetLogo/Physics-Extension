@@ -14,6 +14,7 @@ import scala.collection.mutable
 
 class PhysExtension extends api.DefaultClassManager {
   var world: dynamics.World = new dynamics.World()
+  var turtleChanges: Integer = 0
   var turtlesToBodies: mutable.Map[Turtle, Body] = mutable.LinkedHashMap[Turtle, Body]()
   var patchesToBodies: mutable.Map[Patch, Body] = mutable.LinkedHashMap[Patch, Body]()
 
@@ -22,6 +23,9 @@ class PhysExtension extends api.DefaultClassManager {
     manager.addPrimitive("set-gravity", SetGravity)
     manager.addPrimitive("update", Update)
     manager.addPrimitive("forward", Forward)
+    manager.addPrimitive("total-ke",TotalKE)
+    manager.addPrimitive("stop-all",StopAll)
+    manager.addPrimitive("changes",  NumChanges)
 
   }
 
@@ -37,6 +41,7 @@ class PhysExtension extends api.DefaultClassManager {
     world.setGravity(new Vector2(0,0))
     turtlesToBodies.clear()
     patchesToBodies.clear()
+    turtleChanges = 0
   }
 
   object SetPhysical extends api.Command {
@@ -73,6 +78,7 @@ class PhysExtension extends api.DefaultClassManager {
               val body = new Body
               val fixture = body.addFixture(Geometry.createSquare(1))
               fixture.setFriction(0)
+              fixture.setRestitution(1)
               body.setMass(MassType.INFINITE)
               body.getTransform.setTranslation(patch.pxcor, patch.pycor)
               world.addBody(body)
@@ -94,6 +100,7 @@ class PhysExtension extends api.DefaultClassManager {
           turtlesToBodies.remove(turtle)
         } else {
           if (turtle.xcor != body.getWorldCenter.x || turtle.ycor != body.getWorldCenter.y) {
+            turtleChanges += 1
             body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
           }
           val radians = StrictMath.toRadians(90 - turtle.heading)
@@ -150,7 +157,38 @@ class PhysExtension extends api.DefaultClassManager {
 
 
   }
+  object TotalKE extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      var total : Double = 0.0
+      turtlesToBodies.foreach { case (turtle, body) => total += body.getMass.getMass * body.getLinearVelocity.getMagnitude * body.getLinearVelocity.getMagnitude}
+
+      Double.box(total)
+
+    }
 
 
+  }
+  object NumChanges extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+
+      Int.box(turtleChanges)
+    }
+
+
+  }
+
+  object StopAll extends api.Command {
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List())
+
+    override def perform(args: Array[Argument], context: Context): Unit = {
+      turtlesToBodies.foreach { case (turtle, body) => body.setLinearVelocity(new Vector2(0.0, 0.0))}
+      }
+  }
 }
 

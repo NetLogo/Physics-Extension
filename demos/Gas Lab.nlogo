@@ -9,7 +9,7 @@ to setup
     set pcolor white
     phys:set-physical true
   ]
-  ask n-of 100 patches with [ pcolor = black ] [
+  ask n-of number patches with [ pcolor = black ] [
     sprout 1 [
       set size max list 0.2 (1 + random-normal 0 size-std)
       phys:set-physical true
@@ -28,11 +28,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-647
-448
+800
+601
 -1
 -1
-13.0
+17.64
 1
 10
 1
@@ -95,7 +95,7 @@ number
 number
 0
 200
-100.0
+68.0
 1
 1
 NIL
@@ -110,7 +110,7 @@ size-std
 size-std
 0
 1
-0.0
+0.2
 .1
 1
 NIL
@@ -119,22 +119,22 @@ HORIZONTAL
 SLIDER
 178
 610
-350
+380
 643
 gravity
 gravity
--5
-5
 -0.1
 0.1
+0.0
+0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-354
+387
 609
-526
+559
 642
 dt
 dt
@@ -145,6 +145,52 @@ dt
 1
 NIL
 HORIZONTAL
+
+BUTTON
+48
+160
+121
+193
+Stop All
+phys:stop-all
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+1234
+36
+1434
+186
+Kinetic Energy
+time
+KE
+0.0
+0.5
+0.0
+0.5
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot phys:total-ke"
+
+MONITOR
+1056
+108
+1198
+153
+KE
+phys:total-ke
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
