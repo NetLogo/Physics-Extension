@@ -1,14 +1,16 @@
 extensions [ phys ]
-
+globals [ke_last]
 to setup
   ca
   set-default-shape turtles "circle"
   ask patches with [
-    pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor
+   pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor
   ] [
-    set pcolor white
-    phys:set-physical true
+   set pcolor white
+   phys:set-physical true
   ]
+
+ ;; ask n-of 10 patches [ set pcolor white phys:set-physical true]
   ask n-of number patches with [ pcolor = black ] [
     sprout 1 [
       set size max list 0.2 (1 + random-normal 0 size-std)
@@ -20,8 +22,12 @@ to setup
 end
 
 to go
+  set ke_last phys:total-ke
   phys:set-gravity 0 gravity
   phys:update dt
+  if not (ke_last = 0) [
+    if abs((phys:total-ke - ke_last) / ke_last) > 0.01 [stop]
+  ]
   tick
 end
 @#$#@#$#@
@@ -95,7 +101,7 @@ number
 number
 0
 200
-68.0
+51.0
 1
 1
 NIL
@@ -188,6 +194,17 @@ MONITOR
 153
 KE
 phys:total-ke
+17
+1
+11
+
+MONITOR
+970
+230
+1102
+275
+NIL
+phys:collision-number
 17
 1
 11
