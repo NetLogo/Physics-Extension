@@ -35,6 +35,7 @@ class PhysExtension extends api.DefaultClassManager {
   var newE: Double = 0.0
   var newEa: Double = 0.0
   var eDiffTolerance = 0.00001
+  var numCorrections: Long = 0
   var doConservation: Boolean = false
 
 
@@ -45,7 +46,7 @@ class PhysExtension extends api.DefaultClassManager {
     manager.addPrimitive("update-time-sync", UpdateSync)
     manager.addPrimitive("push", Forward)
     manager.addPrimitive("apply-force", ApplyForce)
-
+    manager.addPrimitive("get-total-corrections", TotalCorrections)
     manager.addPrimitive("total-ke", TotalKE)
     manager.addPrimitive("total-e", TotalE)
     manager.addPrimitive("total-newe", TotalNewE)
@@ -60,6 +61,7 @@ class PhysExtension extends api.DefaultClassManager {
     manager.addPrimitive("get-turtle-collisions", TurtCols)
     manager.addPrimitive("get-patch-collisions", PatchCols)
     manager.addPrimitive("get-mlc", GetMLC)
+    manager.addPrimitive("do-conservation", SetConservation)
   }
 
   override def runOnce(em: ExtensionManager): Unit = {
@@ -70,13 +72,17 @@ class PhysExtension extends api.DefaultClassManager {
   override def clearAll(): Unit = {
     super.clearAll()
     world = new dynamics.World()
-    world.getSettings.setRestitutionVelocity(1)
+    world.getSettings.setRestitutionVelocity(0)
     world.getSettings.setContinuousDetectionMode(ContinuousDetectionMode.ALL)
     world.setGravity(new Vector2(0,0))
     turtlesToBodies.clear()
     patchesToBodies.clear()
+    bodiesToTurtles.clear()
+    bodiesToPatches.clear()
+    turtlesLastV.clear()
     turtlesLastE.clear()
     turtleChanges = 0
+    numCorrections = 0
     lastGrav = new Vector2(0.0, 0.0)
     newE = 0.0
     newEa = 0.0
@@ -92,7 +98,7 @@ class PhysExtension extends api.DefaultClassManager {
             turtlesToBodies.getOrElseUpdate(turtle, {
               val body = new Body()
               val fixture = body.addFixture(Geometry.createCircle(turtle.size / 2))
-              fixture.setRestitution(1)
+              fixture.setRestitution(1.0)
               fixture.setFriction(0)
               body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
               body.getTransform.setRotation(StrictMath.toRadians(90 - turtle.heading))
@@ -116,7 +122,7 @@ class PhysExtension extends api.DefaultClassManager {
               val body = new Body
               val fixture = body.addFixture(Geometry.createSquare(1))
               fixture.setFriction(0)
-              fixture.setRestitution(1)
+              fixture.setRestitution(1.0)
               body.setMass(MassType.INFINITE)
               body.getTransform.setTranslation(patch.pxcor, patch.pycor)
               world.addBody(body)
@@ -162,7 +168,8 @@ class PhysExtension extends api.DefaultClassManager {
       world.update(args(0).getDoubleValue, 60)
       world.removeAllListeners()
 
-      turtlesToBodies.foreach { case (turtle, body) =>
+        // Weak Energy Truncation //
+     /*   turtlesToBodies.foreach { case (turtle, body) =>
         val oldEtotal: Double = turtlesLastE(turtle).x + turtlesLastE(turtle).y
         val turtleE: Double = 0.5 * body.getMass.getMass * StrictMath.pow(body.getLinearVelocity.getMagnitude, 2.0) + (floor - body.getTransform.getTranslationY) * world.getGravity.y * body.getMass.getMass
         val eDiff: Double = turtleE - oldEtotal
@@ -172,13 +179,13 @@ class PhysExtension extends api.DefaultClassManager {
           if (!(body.getLinearVelocity.getMagnitude - vDiff == 0))
             body.getLinearVelocity.setMagnitude(body.getLinearVelocity.getMagnitude - vDiff)
         }
-      }
+      } */
 
 
 
 
 
-      if (newEa > 0.0) newE = newEa
+      //if (newEa > 0.0) newE = newEa
       turtlesToBodies.foreach { case (turtle, body) =>
 
         if (turtle.xcor != body.getWorldCenter.x || turtle.ycor != body.getWorldCenter.y) {
@@ -199,6 +206,14 @@ class PhysExtension extends api.DefaultClassManager {
     }
 
     override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType), agentClassString = "O---")
+  }
+
+  object SetConservation extends api.Command {
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.BooleanType), agentClassString = "O---")
+    override def perform(args: Array[Argument], context: Context): Unit = {
+       if (args(0).getBoolean) {doConservation = true } else {doConservation = false}
+    }
+
   }
 
   object UpdateSync extends api.Command {
@@ -278,7 +293,8 @@ class PhysExtension extends api.DefaultClassManager {
       val turtle = context.getAgent.asInstanceOf[Turtle]
       val amount = args(0).getDoubleValue
       turtlesToBodies(turtle).applyForce(new Force(turtle.dx * amount, turtle.dy * amount))
-
+      turtlesLastV.getOrElseUpdate(turtle, new Vector2(0.0, 0.0)).set(turtlesToBodies(turtle).getLinearVelocity)
+      turtlesLastE(turtle).set((floor - turtlesToBodies(turtle).getTransform.getTranslationY) * world.getGravity.y * turtlesToBodies(turtle).getMass.getMass, 0.5 * turtlesToBodies(turtle).getMass.getMass * StrictMath.pow(turtlesToBodies(turtle).getLinearVelocity.getMagnitude, 2.0) )
 
     }
 
@@ -297,7 +313,8 @@ class PhysExtension extends api.DefaultClassManager {
       val heading = ((90 - args(1).getDoubleValue) / 360.0) * 2 * StrictMath.PI
 
       turtlesToBodies(turtle).applyForce(new Force(StrictMath.cos(heading) * amount, StrictMath.sin(heading) * amount))
-
+      turtlesLastV.getOrElseUpdate(turtle, new Vector2(0.0, 0.0)).set(turtlesToBodies(turtle).getLinearVelocity)
+      turtlesLastE(turtle).set((floor - turtlesToBodies(turtle).getTransform.getTranslationY) * world.getGravity.y * turtlesToBodies(turtle).getMass.getMass, 0.5 * turtlesToBodies(turtle).getMass.getMass * StrictMath.pow(turtlesToBodies(turtle).getLinearVelocity.getMagnitude, 2.0) )
     }
 
 
@@ -381,47 +398,80 @@ class PhysExtension extends api.DefaultClassManager {
 
   }
 
+
+  // This is where collision conservation should be happening!! //
   class ContactHandler extends ContactAdapter {
 
-    override def postSolve(point: SolvedContactPoint): Unit = {
+    override def preSolve(point: ContactPoint): Boolean = {
 
       if (bodiesToTurtles.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
 
         val turtle1: Turtle = bodiesToTurtles(point.getBody1)
         val turtle2: Turtle = bodiesToTurtles(point.getBody2)
-
         turtlesLastE(turtle1).set((floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass, 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) )
         turtlesLastE(turtle2).set((floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass, 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) )
 
-
-
       }
       else if (bodiesToTurtles.contains(point.getBody1) && bodiesToPatches.contains(point.getBody2)) {
-        System.out.println(point.getNormal.getDirection)
+        val turtle1: Turtle = bodiesToTurtles(point.getBody1)
+        turtlesLastE(turtle1).set((floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass, 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) )
 
 
       }
       else if (bodiesToPatches.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
-        val turtle = bodiesToTurtles(point.getBody2)
-       // point.getBody2.getLinearVelocity.setDirection(StrictMath.PI / 2.0)
-
-      }
-      super.postSolve(point)}
-
-    override def preSolve(point: ContactPoint): Boolean = {
-      if (bodiesToTurtles.contains(point.getBody1) && bodiesToPatches.contains(point.getBody2)) {
-        val turtle = bodiesToTurtles(point.getBody1)
-         turtlesLastV.getOrElseUpdate(turtle, new Vector2(0.0, 0.0)).set(point.getBody1.getLinearVelocity)
-
-
-      }
-      else if (bodiesToPatches.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
-        val turtle = bodiesToTurtles(point.getBody2)
-         turtlesLastV.getOrElseUpdate(turtle, new Vector2(0.0, 0.0)).set(point.getBody2.getLinearVelocity)
-
+        val turtle2: Turtle = bodiesToTurtles(point.getBody2)
+        turtlesLastE(turtle2).set((floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass, 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) )
 
       }
       super.preSolve(point)
+    }
+
+    override def postSolve(point: SolvedContactPoint): Unit = {
+      if (bodiesToTurtles.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
+        val turtle1: Turtle = bodiesToTurtles(point.getBody1)
+        val turtle2: Turtle = bodiesToTurtles(point.getBody2)
+        val oldE: Double = turtlesLastE(turtle1).x + turtlesLastE(turtle1).y + turtlesLastE(turtle2).x + turtlesLastE(turtle2).y
+        val newE: Double = ((floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass + 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0)) + ((floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass + 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0))
+        val eDiff: Double = newE - oldE
+        val eDiff1: Double = eDiff * point.getBody1.getMass.getMass / (point.getBody2.getMass.getMass + point.getBody1.getMass.getMass)
+        val eDiff2: Double = eDiff * point.getBody2.getMass.getMass / (point.getBody2.getMass.getMass + point.getBody1.getMass.getMass)
+        if ((StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff1 / point.getBody1.getMass.getMass)) >= 0 && (StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff2 / point.getBody2.getMass.getMass)) >= 0) {
+          val vFin1: Double = StrictMath.sqrt(StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff1 / point.getBody1.getMass.getMass))
+          val vFin2: Double = StrictMath.sqrt(StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff2 / point.getBody2.getMass.getMass))
+          if ((StrictMath.abs(eDiff) > eDiffTolerance) && doConservation) {
+            numCorrections += 1
+            point.getBody1.getLinearVelocity.setMagnitude(vFin1)
+            point.getBody2.getLinearVelocity.setMagnitude(vFin2)
+          }
+        }
+      }
+      else if (bodiesToTurtles.contains(point.getBody1) && bodiesToPatches.contains(point.getBody2)) {
+        val turtle = bodiesToTurtles(point.getBody1)
+        val oldE: Double = turtlesLastE(turtle).x + turtlesLastE(turtle).y
+        val newE: Double = ((floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass + 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0))
+        val eDiff: Double = newE - oldE
+        if ((StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff / point.getBody1.getMass.getMass)) >= 0) {
+          val vFin: Double = StrictMath.sqrt(StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff / point.getBody1.getMass.getMass))
+          if ((StrictMath.abs(eDiff) > eDiffTolerance) && doConservation) {
+            numCorrections += 1
+            point.getBody1.getLinearVelocity.setMagnitude(vFin)
+          }
+        }
+      }
+      else if (bodiesToPatches.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
+        val turtle = bodiesToTurtles(point.getBody2)
+        val oldE: Double = turtlesLastE(turtle).x + turtlesLastE(turtle).y
+        val newE: Double = ((floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass + 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0))
+        val eDiff: Double = newE - oldE
+        if ((StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff / point.getBody2.getMass.getMass)) >= 0) {
+          val vFin: Double = StrictMath.sqrt(StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff / point.getBody2.getMass.getMass))
+          if ((StrictMath.abs(eDiff) > eDiffTolerance) && doConservation) {
+            numCorrections += 1
+            point.getBody2.getLinearVelocity.setMagnitude(vFin)
+          }
+        }
+      }
+      super.postSolve(point)
     }
 
 
@@ -434,6 +484,18 @@ class PhysExtension extends api.DefaultClassManager {
     override def report(args: Array[Argument], context: Context): AnyRef = {
 
       Double.box(turtleChanges)
+    }
+
+
+  }
+
+  object TotalCorrections extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+
+      Double.box(numCorrections)
     }
 
 
