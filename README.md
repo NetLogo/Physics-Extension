@@ -76,6 +76,8 @@ _This code is from the Ball Bounce Demo model._
 
 - [Target Practice Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
 
+- [Color Collision Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/color_collision_demo.nlogo)
+
 ---
 
 ## Primitives:

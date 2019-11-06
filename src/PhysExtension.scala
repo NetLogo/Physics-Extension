@@ -178,9 +178,9 @@ class PhysExtension extends api.DefaultClassManager {
         if ((StrictMath.abs(eDiff) > eDiffTolerance) && doConservation) {
           if (!(body.getLinearVelocity.getMagnitude - vDiff == 0))
             body.getLinearVelocity.setMagnitude(body.getLinearVelocity.getMagnitude - vDiff)
-        }
       } */
 
+    }
 
 
 
