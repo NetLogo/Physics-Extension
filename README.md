@@ -63,22 +63,35 @@ to go
 end
 ```
 
-_This model is available in the demo folder included with the extension._
+_This code is from the Ball Bounce Demo model._
+
+
+---
+
+## Demo Models:
+
+---
+
+- [Ball Bounce Demo] (https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
+
+- [Target Practice Demo] (https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
+
+---
 
 ## Primitives:
 
 #### Global:
-[`phys:update`](#phys:update) [`phys:set-gravity`](#phys:set-gravity) [`phys:do-conservation`](#phys:do-conservation)
+[`phys:update`](#physupdate) [`phys:set-gravity`](#physset-gravity) [`phys:do-conservation`](#physdo-conservation)
 
 ---
 
 #### Patch or Turtle Context:
-[`phys:set-physical`](#phys:set-physical) [`phys:get-turtle-collisions`](#phys:get-turtle-collisions)
+[`phys:set-physical`](#physset-physical) [`phys:get-turtle-collisions`](#physget-turtle-collisions)
 
 ---
 
 #### Turtle Context Only:
-[`phys:push`](#phys:push) [`phys:apply-force`](#phys:apply-force) [`phys:set-v`](#phys:set-v) [`phys:get-vx`](#phys:get-vx) [`phys:get-vy`](#phys:get-vy) [`phys:get-patch-collisions`](#phys:get-patch-collisions)
+[`phys:push`](#physpush) [`phys:apply-force`](#physapply-force) [`phys:set-v`](#physset-v) [`phys:get-vx`](#physget-vx) [`phys:get-vy`](#physget-vy) [`phys:get-patch-collisions`](#physget-patch-collisions)
 
 ---
 ### phys:set-physical
