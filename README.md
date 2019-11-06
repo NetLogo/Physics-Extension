@@ -72,9 +72,9 @@ _This code is from the Ball Bounce Demo model._
 
 ---
 
-- [Ball Bounce Demo] (https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
+- [Ball Bounce Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
 
-- [Target Practice Demo] (https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
+- [Target Practice Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
 
 ---
 
