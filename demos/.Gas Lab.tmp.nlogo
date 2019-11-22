@@ -1,6 +1,6 @@
 extensions [ phys ]
-globals [ke_last]
-turtles-own [last-ke]
+globals [ke_last stopped]
+turtles-own [last-ke collided?]
 
 to setup
   ca
@@ -15,6 +15,7 @@ to setup
  ;; ask n-of 10 patches [ set pcolor white phys:set-physical true]
   ask n-of number patches with [ pcolor = black and pxcor < (max-pxcor - 1) and pxcor > (min-pxcor + 1) and pycor < (max-pycor - 1) and pycor > (min-pycor + 1) ] [
     sprout 1 [
+
       set size max list 0.2 (1 + random-normal 0 size-std)
       phys:set-physical true
       phys:push 10
@@ -24,6 +25,7 @@ to setup
   phys:update dt
   ask turtles
   [set last-ke phys:get-ke]
+  set stopped false
   reset-ticks
 end
 
@@ -36,23 +38,28 @@ to go
   ; ]
   ask turtles
   [
-    let curr-v phys:get-v
+    let curr-ke phys:get-ke
     let t-cols phys:get-turtle-collisions
     let p-cols phys:get-patch-collisions
     ask t-cols
     [
-      if ((curr-v ^ 2 + phys:get-v ^ 2) != (last-v ^ 2 + ([last-v] of myself) ^ 2))
+      if ((curr-ke + phys:get-ke) - (last-ke + [last-ke] of myself)) > 0.000000000001
       [
-        print ((curr-v ^ 2) + (phys:get-v ^ 2))
-        print ((last-v ^ 2) + (([last-v] of myself) ^ 2))
+        print (curr-ke + phys:get-ke) - (last-ke + [last-ke] of myself)
         print size
         set shape "star"
-        ask myself [set shape "star"]
-        stop
+        set size 2
+        set color red
+        ask myself [set shape "star" set size 2 set color red]
+        set stopped true
       ]
     ]
+  ]
+  ask turtles
+  [
     set last-ke phys:get-ke
   ]
+  if stopped [stop]
   tick
 end
 @#$#@#$#@
