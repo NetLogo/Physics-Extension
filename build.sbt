@@ -22,4 +22,4 @@ libraryDependencies ++= Seq(
 	"org.dyn4j" % "dyn4j" % "3.2.4"
 )
 
-netLogoVersion := "6.1.1"
+netLogoVersion := "6.1.0-RC1"
