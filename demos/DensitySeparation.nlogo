@@ -12,12 +12,11 @@ to setup
  ;; ask n-of 10 patches [ set pcolor white phys:set-physical true]
   ask n-of number patches with [ pcolor = black and pxcor < (max-pxcor - 1) and pxcor > (min-pxcor + 1) and pycor < (max-pycor - 1) and pycor > (min-pycor + 1) ] [
     sprout 1 [
-      let pair one-of [[red 0.5 5] [yellow 0.6 4] [blue 0.7 3] [green 0.8 2] [orange 1 1]]
+      let pair one-of (list (list red 0.5 red-density) (list yellow 0.6 yellow-density) (list blue 0.7 blue-density) (list green 0.8 green-density) (list orange 1 orange-density))
       set color item 0 pair
       set size item 1 pair
       phys:set-physical true
-      phys:set-mass (size * pi * item 2 pair)
-      phys:push 60
+      phys:set-mass ((size ^ 2) * pi * item 2 pair)
     ]
   ]
   phys:do-collision-detection true
@@ -58,10 +57,10 @@ ticks
 30.0
 
 BUTTON
-16
-101
-82
-134
+17
+52
+83
+85
 NIL
 setup\n
 NIL
@@ -75,10 +74,10 @@ NIL
 1
 
 BUTTON
-123
-105
-186
-138
+125
+51
+188
+84
 NIL
 go
 T
@@ -100,47 +99,32 @@ number
 number
 0
 1000
-834.0
+554.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-4
-610
-176
-643
-size-std
-size-std
-0
-1
-0.4
-.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-178
-610
-380
-643
+3
+322
+205
+355
 gravity
 gravity
 -0.1
 0.1
-0.0
+-0.1
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-387
-609
-559
-642
+20
+359
+192
+392
 dt
 dt
 0
@@ -152,10 +136,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-48
-160
-121
-193
+63
+283
+136
+316
 Stop All
 phys:stop-all
 NIL
@@ -169,99 +153,123 @@ NIL
 1
 
 PLOT
-1234
-36
-1434
-186
-Kinetic Energy
-time
-KE
+805
+10
+1186
+315
+Average Height
+NIL
+NIL
 0.0
-0.5
+10.0
 0.0
-0.5
+10.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot phys:total-e"
+"default" 1.0 0 -955883 true "" "plot mean [ycor] of turtles with [color = orange]"
+"pen-1" 1.0 0 -13840069 true "" "plot mean [ycor] of turtles with [color = green]"
+"pen-2" 1.0 0 -13345367 true "" "plot mean [ycor] of turtles with [color = blue]"
+"pen-3" 1.0 0 -1184463 true "" "plot mean [ycor] of turtles with [color = yellow]"
+"pen-4" 1.0 0 -2674135 true "" "plot mean [ycor] of turtles with [color = red]"
 
-MONITOR
-1056
-108
-1198
-153
-E
-phys:total-e
-17
+SLIDER
+16
+92
+188
+125
+orange-density
+orange-density
 1
-11
-
-MONITOR
-809
-13
-941
-58
+10
+10.0
+1
+1
 NIL
-phys:collision-number
-17
-1
-11
+HORIZONTAL
 
-MONITOR
-806
-67
-964
-112
-NIL
-phys:get-total-corrections
-17
+SLIDER
+16
+128
+188
+161
+green-density
+green-density
 1
-11
+10
+8.0
+1
+1
+NIL
+HORIZONTAL
 
-MONITOR
-1053
-164
-1226
-209
-NIL
-phys:get-total-uncorrectable
-17
+SLIDER
+16
+165
+188
+198
+blue-density
+blue-density
 1
-11
+10
+6.0
+1
+1
+NIL
+HORIZONTAL
 
-MONITOR
-820
-350
-1032
-395
-NIL
-phys:get-num-energy-discrepancies
-17
+SLIDER
+16
+202
+188
+235
+yellow-density
+yellow-density
 1
-11
+10
+4.0
+1
+1
+NIL
+HORIZONTAL
 
-MONITOR
-1126
-331
-1332
-376
-NIL
-phys:get-total-energy-discrepancy
-17
+SLIDER
+15
+239
+187
+272
+red-density
+red-density
 1
-11
+10
+2.0
+1
+1
+NIL
+HORIZONTAL
 
-MONITOR
-1057
-59
-1226
-104
+PLOT
+805
+318
+1187
+601
+Average Energy
 NIL
-sum [phys:get-ke] of turtles
-17
-1
-11
+NIL
+0.0
+5.0
+0.0
+50.0
+true
+false
+"" "clear-plot "
+PENS
+"default" 1.0 1 -955883 true "" "plotxy 0 mean [phys:get-e] of turtles with [color = orange]"
+"pen-1" 1.0 1 -13840069 true "" "plotxy 1 mean [phys:get-e] of turtles with [color = green]"
+"pen-2" 1.0 1 -13345367 true "" "plotxy 2 mean [phys:get-e] of turtles with [color = blue]"
+"pen-3" 1.0 1 -1184463 true "" "plotxy 3 mean [phys:get-e] of turtles with [color = yellow]"
+"pen-4" 1.0 1 -2674135 true "" "plotxy 4 mean [phys:get-e] of turtles with [color = red]"
 
 @#$#@#$#@
 ## WHAT IS IT?

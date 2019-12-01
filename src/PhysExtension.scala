@@ -6,6 +6,7 @@ import api.{Argument, Context, ExtensionManager, ScalaConversions}
 import agent._
 import org.nlogo.core.AgentKind
 import java.lang.StrictMath
+import org.nlogo.api.LogoListBuilder
 
 import org.dyn4j.collision.narrowphase.Penetration
 import org.dyn4j.dynamics
@@ -50,7 +51,6 @@ class PhysExtension extends api.DefaultClassManager {
     manager.addPrimitive("set-physical", SetPhysical)
     manager.addPrimitive("set-gravity", SetGravity)
     manager.addPrimitive("update", Update)
-    //manager.addPrimitive("update-time-sync", UpdateSync)
     manager.addPrimitive("push", Forward)
     manager.addPrimitive("apply-force", ApplyForce)
     manager.addPrimitive("get-total-corrections", TotalCorrections)
@@ -62,9 +62,15 @@ class PhysExtension extends api.DefaultClassManager {
     manager.addPrimitive("total-newe", TotalNewE)
     manager.addPrimitive("total-laste", TotalLastE)
     manager.addPrimitive("get-v", GetV)
+    manager.addPrimitive("set-v-magnitude", SetVMag)
     manager.addPrimitive("get-ke", GetKE)
+    manager.addPrimitive("get-e", GetE)
     manager.addPrimitive("get-vx", GetVx)
     manager.addPrimitive("get-vy", GetVy)
+    manager.addPrimitive("get-mass", GetMass)
+    manager.addPrimitive("get-center-of-mass", CenterOfMass)
+    manager.addPrimitive("get-inertia", Inertia)
+    manager.addPrimitive("set-mass", SetMass)
     manager.addPrimitive("set-v", SetV)
     manager.addPrimitive("stop-all", StopAll)
     manager.addPrimitive("changes",  NumChanges)
@@ -183,29 +189,28 @@ class PhysExtension extends api.DefaultClassManager {
       turtlesCollisionListPatches = mutable.LinkedHashMap[Patch, List[Turtle]]()
       newEa = 0.0
       if (doCollisionDetection)
-      //  world.addListener(new CollisionReporter())
       world.addListener(new ContactHandler())
       world.update(args(0).getDoubleValue, 60)
       world.removeAllListeners()
-
-        // Weak Energy Truncation //
-     /*   turtlesToBodies.foreach { case (turtle, body) =>
-        val oldEtotal: Double = turtlesLastE(turtle).x + turtlesLastE(turtle).y
-        val turtleE: Double = 0.5 * body.getMass.getMass * StrictMath.pow(body.getLinearVelocity.getMagnitude, 2.0) + (floor - body.getTransform.getTranslationY) * world.getGravity.y * body.getMass.getMass
-        val eDiff: Double = turtleE - oldEtotal
-        newEa += eDiff
-        val vDiff: Double = eDiff / (2.0 * body.getLinearVelocity.getMagnitude)
-        if ((StrictMath.abs(eDiff) > eDiffTolerance) && doConservation) {
-          if (!(body.getLinearVelocity.getMagnitude - vDiff == 0))
-            body.getLinearVelocity.setMagnitude(body.getLinearVelocity.getMagnitude - vDiff)
+      if (StrictMath.abs(totalEnergyDiscrepancy) > eDiffTolerance)
+      {
+        turtlesToBodies.foreach { case (turtle, body) =>
+          if (StrictMath.abs(totalEnergyDiscrepancy) > eDiffTolerance) {
+            val ke: Double = 0.5 * body.getMass.getMass * StrictMath.pow(body.getLinearVelocity.getMagnitude, 2.0)
+            var eDiff: Double = 0.0
+            if (totalEnergyDiscrepancy < (ke / 20.0)) {
+              eDiff = totalEnergyDiscrepancy
+            }
+            else {
+              eDiff = (ke / 20.0)
+            }
+            val vFin: Double = StrictMath.sqrt(StrictMath.pow(body.getLinearVelocity.getMagnitude, 2.0) - (2 * eDiff / body.getMass.getMass))
+            body.getLinearVelocity.setMagnitude(vFin)
+            totalEnergyDiscrepancy -= eDiff
+          }
         }
-      } */
+      }
 
-
-
-
-
-      //if (newEa > 0.0) newE = newEa
       turtlesToBodies.foreach { case (turtle, body) =>
 
         if (turtle.xcor != body.getWorldCenter.x || turtle.ycor != body.getWorldCenter.y) {
@@ -243,61 +248,6 @@ class PhysExtension extends api.DefaultClassManager {
   }
 
 
-  /*object UpdateSync extends api.Command {
-    override def perform(args: Array[Argument], context: Context): Unit = {
-
-      turtlesToBodies.foreach { case (turtle, body) =>
-        if (turtle.id < 0) {
-          world.removeBody(body)
-          turtlesToBodies.remove(turtle)
-        } else {
-          if (turtle.xcor != body.getWorldCenter.x || turtle.ycor != body.getWorldCenter.y) {
-            turtleChanges += 1
-            body.getTransform.setTranslation(turtle.xcor, turtle.ycor)
-          }
-          val radians = StrictMath.toRadians(90 - turtle.heading)
-          if (radians != body.getTransform.getRotation) {
-            body.getTransform.setRotation(radians)
-
-          }
-
-          // TODO: Set Size
-        }
-      }
-      bodiesToTurtles = turtlesToBodies.map(_.swap)
-      bodiesToPatches = patchesToBodies.map(_.swap)
-      patchesCollisionList = mutable.LinkedHashMap[Turtle, List[Patch]]()
-      turtlesCollisionList = mutable.LinkedHashMap[Turtle, List[Turtle]]()
-      turtlesCollisionListPatches = mutable.LinkedHashMap[Patch, List[Turtle]]()
-      //world.addListener(new CollisionReporter())
-      if (!(cTime == 0)) {
-        val eTime: Long = System.currentTimeMillis() - cTime
-        world.update(eTime * 0.001, 600000000)
-      }
-      cTime = System.currentTimeMillis()
-      world.removeAllListeners()
-      turtlesToBodies.foreach { case (turtle, body) =>
-
-        if (turtle.xcor != body.getWorldCenter.x || turtle.ycor != body.getWorldCenter.y) {
-          turtle.xcor(body.getWorldCenter.x)
-          turtle.ycor(body.getWorldCenter.y)
-
-        }
-        val degrees = 90 - StrictMath.toDegrees(body.getTransform.getRotation)
-        if (degrees != turtle.heading) {
-          turtle.heading(degrees)
-
-        }
-
-        // TODO: Set Size
-      }
-
-
-    }
-
-    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType), agentClassString = "O---")
-  }
-*/
   object SetGravity extends api.Command {
     override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType, Syntax.NumberType))
 
@@ -394,66 +344,6 @@ class PhysExtension extends api.DefaultClassManager {
 
   }
 
- /* class CollisionReporter() extends CollisionAdapter {
-
-    override def collision(body1: Body, fixture1: BodyFixture, body2: Body, fixture2: BodyFixture, penetration: Penetration): Boolean = {
-      if (bodiesToTurtles.contains(body1) && bodiesToTurtles.contains(body2)) {
-
-        val turtle1: Turtle = bodiesToTurtles(body1)
-        val turtle2: Turtle = bodiesToTurtles(body2)
-        turtlesCollisionList = turtlesCollisionList + (turtle1 -> turtlesCollisionList.getOrElseUpdate(turtle1, List[Turtle]()).::(turtle2))
-        turtlesCollisionList = turtlesCollisionList + (turtle2 -> turtlesCollisionList.getOrElseUpdate(turtle2, List[Turtle]()).::(turtle1))
-
-      } else if (bodiesToTurtles.contains(body1) && bodiesToPatches.contains(body2)) {
-
-        val turtle: Turtle = bodiesToTurtles(body1)
-        val patch: Patch = bodiesToPatches(body2)
-        patchesCollisionList = patchesCollisionList + (turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch))
-        turtlesCollisionListPatches = turtlesCollisionListPatches + (patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle))
-
-      } else if (bodiesToPatches.contains(body1) && bodiesToTurtles.contains(body2)) {
-
-        val patch: Patch = bodiesToPatches(body1)
-        val turtle: Turtle = bodiesToTurtles(body2)
-        patchesCollisionList = patchesCollisionList + (turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch))
-        turtlesCollisionListPatches = turtlesCollisionListPatches + (patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle))
-
-      }
-      collisions += 1
-      super.collision(body1, fixture1, body2, fixture2)
-    } */
-
-   /* override def collision(point: ContactConstraint): Boolean = {
-
-
-      if (bodiesToTurtles.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
-        val turtle1: Turtle = bodiesToTurtles(point.getBody1)
-        val turtle2: Turtle = bodiesToTurtles(point.getBody2)
-        val ke1: Double = 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0)
-        val ke2: Double = 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0)
-        val pe1: Double = (floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass
-        val pe2: Double = (floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass
-        turtlesLastETT.put((turtle1, turtle2),new Vector2(pe1, ke1))
-        turtlesLastETT.put((turtle2, turtle1),new Vector2(pe2, ke2))
-      }
-      else if (bodiesToTurtles.contains(point.getBody1) && bodiesToPatches.contains(point.getBody2)) {
-        val turtle1: Turtle = bodiesToTurtles(point.getBody1)
-        val ke1: Double = 0.5 * point.getBody1.getMass.getMass * StrictMath.pow(point.getBody1.getLinearVelocity.getMagnitude, 2.0)
-        val pe1: Double = (floor - point.getBody1.getTransform.getTranslationY) * world.getGravity.y * point.getBody1.getMass.getMass
-        turtlesLastE.put(turtle1, new Vector2(pe1, ke1))
-      }
-      else if (bodiesToPatches.contains(point.getBody1) && bodiesToTurtles.contains(point.getBody2)) {
-        val turtle2: Turtle = bodiesToTurtles(point.getBody2)
-        val pe2: Double = (floor - point.getBody2.getTransform.getTranslationY) * world.getGravity.y * point.getBody2.getMass.getMass
-        val ke2: Double = 0.5 * point.getBody2.getMass.getMass * StrictMath.pow(point.getBody2.getLinearVelocity.getMagnitude, 2.0)
-        turtlesLastE.put(turtle2 , new Vector2(pe2, ke2))
-      }
-
-
-      super.collision(point)
-    }
-
-  } */
 
 
   // This is where collision conservation should be happening!! //
@@ -735,6 +625,21 @@ class PhysExtension extends api.DefaultClassManager {
 
   }
 
+
+  object CenterOfMass extends api.Reporter {
+
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.ListType, agentClassString = "-T--")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      var com: LogoListBuilder = new LogoListBuilder()
+      com.add(Double.box(turtlesToBodies(turtle).getMass.getCenter.x))
+      com.add(Double.box(turtlesToBodies(turtle).getMass.getCenter.y))
+      com.toLogoList
+    }
+
+  }
+
   object GetV extends api.Reporter
   {
     override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "-T--")
@@ -745,6 +650,26 @@ class PhysExtension extends api.DefaultClassManager {
   }
   }
 
+  object GetMass extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "-T--")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      Double.box(turtlesToBodies(turtle).getMass.getMass)
+    }
+  }
+
+  object Inertia extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "-T--")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      Double.box(turtlesToBodies(turtle).getMass.getInertia)
+    }
+  }
+
   object GetKE extends api.Reporter
   {
     override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "-T--")
@@ -752,6 +677,16 @@ class PhysExtension extends api.DefaultClassManager {
     override def report(args: Array[Argument], context: Context): AnyRef = {
       val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
       Double.box(0.5 * turtlesToBodies(turtle).getMass.getMass * StrictMath.pow(turtlesToBodies(turtle).getLinearVelocity.getMagnitude, 2.0))
+    }
+  }
+
+  object GetE extends api.Reporter
+  {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "-T--")
+
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      Double.box(0.5 * turtlesToBodies(turtle).getMass.getMass * StrictMath.pow(turtlesToBodies(turtle).getLinearVelocity.getMagnitude, 2.0) + (floor - turtlesToBodies(turtle).getTransform.getTranslationY) * world.getGravity.y * turtlesToBodies(turtle).getMass.getMass)
     }
   }
 
@@ -780,13 +715,40 @@ class PhysExtension extends api.DefaultClassManager {
 
   }
 
+  object SetMass extends api.Command
+  {
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType), agentClassString = "-T--")
+    override def perform(args: Array[Argument], context: Context): Unit = {
+
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      turtlesToBodies(turtle).setMass(new Mass(new Vector2(0,0),args(0).getDoubleValue,0.0))
+
+    }
+
+
+  }
+
+
   object SetV extends api.Command
   {
-    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType, Syntax.NumberType), agentClassString = "-TP-")
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType, Syntax.NumberType), agentClassString = "-T--")
     override def perform(args: Array[Argument], context: Context): Unit = {
 
       val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
       turtlesToBodies(turtle).setLinearVelocity(args(0).getDoubleValue, args(1).getDoubleValue)
+
+    }
+
+
+  }
+
+  object SetVMag extends api.Command
+  {
+    override def getSyntax: Syntax = Syntax.commandSyntax(right = List(Syntax.NumberType), agentClassString = "-T--")
+    override def perform(args: Array[Argument], context: Context): Unit = {
+
+      val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
+      turtlesToBodies(turtle).getLinearVelocity.setMagnitude(args(0).getDoubleValue)
 
     }
 

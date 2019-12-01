@@ -1,31 +1,61 @@
-extensions [ phys ]
-to setup
-  ca
-  set-default-shape turtles "circle"
-  ask patches with [
-   pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor
-  ] [
-   set pcolor white
-   phys:set-physical true
-  ]
+extensions [phys]
 
- ;; ask n-of 10 patches [ set pcolor white phys:set-physical true]
-  ask n-of number patches with [ pcolor = black and pxcor < (max-pxcor - 1) and pxcor > (min-pxcor + 1) and pycor < (max-pycor - 1) and pycor > (min-pycor + 1) ] [
-    sprout 1 [
-      let pair one-of [[red 0.5 5] [yellow 0.6 4] [blue 0.7 3] [green 0.8 2] [orange 1 1]]
-      set color item 0 pair
-      set size item 1 pair
-      phys:set-physical true
-      phys:set-mass (size * pi * item 2 pair)
-      phys:push 60
+to set-up
+  clear-all
+  phys:do-conservation true
+  phys:do-collision-detection true
+  ask patches with
+  [
+    pycor = max-pycor
+    or pycor = min-pycor
+    or pxcor = max-pxcor
+    or pxcor = min-pxcor
+    or pycor = 0
+  ]
+  [
+    set pcolor white
+    phys:set-physical true
+  ]
+  ask n-of top-particles patches with
+  [
+    pycor < max-pycor - 1
+    and pycor > 1
+    and pxcor < max-pxcor - 1
+    and pxcor > min-pxcor + 1
+  ]
+  [
+    sprout 1
+    [
+     set shape "circle"
+     set color blue
+     set size 1
+     phys:set-physical true
+     phys:set-mass 1
+     phys:push top-initial-push
     ]
   ]
-  phys:do-collision-detection true
+  ask n-of bottom-particles patches with
+  [
+    pycor > min-pycor + 1
+    and pycor < -1
+    and pxcor < max-pxcor - 1
+    and pxcor > min-pxcor + 1
+  ]
+  [
+    sprout 1
+    [
+     set shape "circle"
+     set color red
+     set size 1
+     phys:set-physical true
+     phys:set-mass 1
+     phys:push bottom-initial-push
+    ]
+  ]
   reset-ticks
 end
 
 to go
-  phys:set-gravity 0 gravity
   phys:update dt
   tick
 end
@@ -33,11 +63,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-800
-601
+708
+509
 -1
 -1
-17.64
+10.0
 1
 10
 1
@@ -47,10 +77,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-24
+24
+-24
+24
 1
 1
 1
@@ -58,12 +88,12 @@ ticks
 30.0
 
 BUTTON
-16
-101
-82
-134
+120
+32
+187
+65
 NIL
-setup\n
+set-up
 NIL
 1
 T
@@ -74,11 +104,71 @@ NIL
 NIL
 1
 
+SLIDER
+15
+68
+187
+101
+top-particles
+top-particles
+1
+350
+350.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+139
+188
+172
+bottom-particles
+bottom-particles
+1
+350
+350.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+16
+103
+188
+136
+top-initial-push
+top-initial-push
+1
+100
+100.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+17
+175
+189
+208
+bottom-initial-push
+bottom-initial-push
+1
+100
+100.0
+1
+1
+NIL
+HORIZONTAL
+
 BUTTON
-123
-105
-186
-138
+54
+32
+117
+65
 NIL
 go
 T
@@ -93,175 +183,18 @@ NIL
 
 SLIDER
 17
-14
+211
 189
-47
-number
-number
-0
-1000
-834.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-4
-610
-176
-643
-size-std
-size-std
+244
+dt
+dt
 0
 1
-0.4
-.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-178
-610
-380
-643
-gravity
-gravity
--0.1
-0.1
-0.0
+0.17
 0.01
 1
 NIL
 HORIZONTAL
-
-SLIDER
-387
-609
-559
-642
-dt
-dt
-0
-1
-0.1
-0.1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-48
-160
-121
-193
-Stop All
-phys:stop-all
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-1234
-36
-1434
-186
-Kinetic Energy
-time
-KE
-0.0
-0.5
-0.0
-0.5
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot phys:total-e"
-
-MONITOR
-1056
-108
-1198
-153
-E
-phys:total-e
-17
-1
-11
-
-MONITOR
-809
-13
-941
-58
-NIL
-phys:collision-number
-17
-1
-11
-
-MONITOR
-806
-67
-964
-112
-NIL
-phys:get-total-corrections
-17
-1
-11
-
-MONITOR
-1053
-164
-1226
-209
-NIL
-phys:get-total-uncorrectable
-17
-1
-11
-
-MONITOR
-820
-350
-1032
-395
-NIL
-phys:get-num-energy-discrepancies
-17
-1
-11
-
-MONITOR
-1126
-331
-1332
-376
-NIL
-phys:get-total-energy-discrepancy
-17
-1
-11
-
-MONITOR
-1057
-59
-1226
-104
-NIL
-sum [phys:get-ke] of turtles
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
