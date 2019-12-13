@@ -72,11 +72,11 @@ _This code is from the Ball Bounce Demo model._
 
 ---
 
-- [Ball Bounce Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
+- [Ball Bounce Demo](https://raw.githubusercontent.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
 
-- [Target Practice Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
+- [Target Practice Demo](https://raw.githubusercontent.com/Loafie/netlogo_phys_extension/master/demos/target_practice_demo.nlogo)
 
-- [Color Collision Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/color_collision_demo.nlogo)
+- [Color Collision Demo](https://raw.githubusercontent.com/Loafie/netlogo_phys_extension/tree/master/demos/color_collision_demo.nlogo)
 
 ---
 
@@ -206,7 +206,7 @@ ask turtles [phys:set-mass 1 + (random 10)]
 ```
 
 ---
-### phys:get-masset-mass
+### phys:get-mass
 
 __`phys:get-mass`__ – _turtle context_
 
