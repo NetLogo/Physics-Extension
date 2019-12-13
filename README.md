@@ -72,11 +72,11 @@ _This code is from the Ball Bounce Demo model._
 
 ---
 
-- [Ball Bounce Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
+- [Ball Bounce Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/ball_bounce_demo.nlogo)
 
-- [Target Practice Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
+- [Target Practice Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/target_practice_demo.nlogo)
 
-- [Color Collision Demo](https://github.com/Loafie/netlogo_phys_extension/tree/master/demos/color_collision_demo.nlogo)
+- [Color Collision Demo](https://raw.github.com/Loafie/netlogo_phys_extension/tree/master/demos/color_collision_demo.nlogo)
 
 ---
 
@@ -93,7 +93,7 @@ _This code is from the Ball Bounce Demo model._
 ---
 
 #### Turtle Context Only:
-[`phys:push`](#physpush) [`phys:apply-force`](#physapply-force) [`phys:set-v`](#physset-v) [`phys:get-vx`](#physget-vx) [`phys:get-vy`](#physget-vy) [`phys:get-patch-collisions`](#physget-patch-collisions)
+[`phys:push`](#physpush) [`phys:apply-force`](#physapply-force) [`phys:set-v`](#physset-v) [`phys:get-vx`](#physget-vx) [`phys:get-vy`](#physget-vy) [`phys:get-patch-collisions`](#physget-patch-collisions) [`phys:get-mass`](#physget-mass) [`phys:set-mass`](#physset-mass)
 
 ---
 ### phys:set-physical
@@ -190,6 +190,32 @@ Apply a force to the object in the simulation world corresponding to the turtle 
 ```
 ; ask turtles to push with a random force with their current heading
 ask turtles [phys:push (random 50)]
+```
+
+---
+### phys:set-mass
+
+__`phys:set-mass`__ _`(mass in kilograms)`_ – _turtle context_
+
+Set the mass of the object in the simulation world corresponding to the turtle. The default mass is based on the size of the turtle.
+
+##### Example:
+```
+; ask turtles to set their masses to a random value between 1 and 10.
+ask turtles [phys:set-mass 1 + (random 10)]
+```
+
+---
+### phys:get-masset-mass
+
+__`phys:get-mass`__ – _turtle context_
+
+Returns the mass of the object in the simulation world corresponding to the turtle. The default mass is based on the size of the turtle.
+
+##### Example:
+```
+; Show the mean mass of all turtles.
+show mean [phys:get-mass] of turtles
 ```
 
 ---
