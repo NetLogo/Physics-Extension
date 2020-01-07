@@ -2,17 +2,36 @@ extensions [ phys ]
 to setup
   ca
   set-default-shape turtles "circle"
-  ask patches with [
-   pxcor = max-pxcor or pxcor = min-pxcor or pycor = max-pycor or pycor = min-pycor
-  ] [
-   set pcolor white
-   phys:set-physical true
+  ask patches with ; set boundary patches
+  [
+    pxcor = max-pxcor
+    or pxcor = min-pxcor
+    or pycor = max-pycor
+    or pycor = min-pycor
   ]
-
- ;; ask n-of 10 patches [ set pcolor white phys:set-physical true]
-  ask n-of number patches with [ pcolor = black and pxcor < (max-pxcor - 1) and pxcor > (min-pxcor + 1) and pycor < (max-pycor - 1) and pycor > (min-pycor + 1) ] [
+  [
+    set pcolor white
+    phys:set-physical true
+  ]
+  ask n-of number patches with ; ask internal patches
+  [
+    pcolor = black
+    and pxcor < (max-pxcor - 1)
+    and pxcor > (min-pxcor + 1)
+    and pycor < (max-pycor - 1)
+    and pycor > (min-pycor + 1)
+  ]
+  [
     sprout 1 [
-      let pair one-of (list (list red 0.5 red-density) (list yellow 0.6 yellow-density) (list blue 0.7 blue-density) (list green 0.8 green-density) (list orange 1 orange-density))
+      let pair one-of
+      (
+        list ; a list of colors sizes and densities
+        (list red 0.5 red-density)
+        (list yellow 0.6 yellow-density)
+        (list blue 0.7 blue-density)
+        (list green 0.8 green-density)
+        (list orange 1 orange-density)
+      )
       set color item 0 pair
       set size item 1 pair
       phys:set-physical true
@@ -274,39 +293,23 @@ PENS
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This is a demonstration model for the NetLogo physics extension intended to show how the primitives are used to simulate physics on turtles and patches with a minimal amount of code. This model is intended to demonstrate how to set the mass of different objects in the physics extension and demonstrate the emergent behavior of mixtures of particles of different densities. 
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+This model uses the physics extension to simulate newtonian physics on some number of five different types of particles with different colors, densities and sizes. There is a gravitational field present which causes the particles to fall toward the bottom of the screen. The particles bounce off of eachother and the boundaries perfectly elastically.
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+The __set-up__ procedure creates a number of turtles specified by the __number__ parameter with round shapes and one of five colors and sizes randomly. The __density__ parameters are used to specify the masses of the turtles of different colors. The __gravity__ parameter controls the gravitational field along the _y-axis_ with a negative number being downward gravity and a positive number being upward gravity. The __go__ button begings simulating physics for an amount of time at each tick according to the __dt__ parameter. 
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Notice the two graphs: one keeps track of the average height of all turtles of a given color and the other keeps track of the average energy of all turtles of a given color. Notice that the average heights of turtles of a different color begin to separate according to density. Also notice that the average enery of turtles of different colors begins to converge on equality. 
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Written by Leif Rasmussen.
 @#$#@#$#@
 default
 true

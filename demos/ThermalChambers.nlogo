@@ -1,9 +1,17 @@
 extensions [phys]
-patches-own [conductor? energy]
+patches-own
+[
+  conductor? ;boolean that determines if the patch is a conductor
+  energy ;amount of energy stored in a conducting patch
+]
 
 to set-up
   clear-all
-  ask patches [set conductor? false set energy 0]
+  ask patches
+  [
+    set conductor? false
+    set energy 0
+  ]
   phys:do-conservation true
   phys:do-collision-detection true
   ask patches with

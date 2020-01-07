@@ -44,7 +44,7 @@ class PhysExtension extends api.DefaultClassManager {
   var numEnergyDiscrepancies: Long = 0
   var totalEnergyDiscrepancy: Double = 0
   var doConservation: Boolean = true
-  var doCollisionDetection: Boolean = false
+  var doCollisionDetection: Boolean = true
 
 
   def load(manager: api.PrimitiveManager)  = {
