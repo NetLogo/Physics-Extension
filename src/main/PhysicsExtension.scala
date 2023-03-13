@@ -1,5 +1,6 @@
+package org.nlogo.extensions.phys
 
-import org.nlogo.{agent, api, core, nvm}
+import org.nlogo.{ agent, api, core, nvm }
 import core.Syntax
 import api.ScalaConversions._
 import api.{Argument, Context, ExtensionManager, ScalaConversions}
@@ -18,7 +19,7 @@ import org.dyn4j.geometry.{Geometry, Mass, MassType, Vector2}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class PhysExtension extends api.DefaultClassManager {
+class PhysicsExtension extends api.DefaultClassManager {
   var world: dynamics.World = new dynamics.World()
   var turtleChanges: Double = 10
   var collisions: Double = 0
@@ -787,4 +788,3 @@ class PhysExtension extends api.DefaultClassManager {
       }
   }
 }
-
