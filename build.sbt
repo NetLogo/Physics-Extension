@@ -1,7 +1,7 @@
 enablePlugins(org.nlogo.build.NetLogoExtension)
 
 name       := "Physics-Extension"
-version    := "0.4.2"
+version    := "0.4.3"
 isSnapshot := true
 
 scalaVersion           := "3.7.0"
