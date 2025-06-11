@@ -1,18 +1,19 @@
 enablePlugins(org.nlogo.build.NetLogoExtension)
 
-name := "Physics-Extension"
-version := "0.4.2"
+name       := "Physics-Extension"
+version    := "0.4.2"
+isSnapshot := true
 
-netLogoExtName      := "phys"
-netLogoClassManager := "org.nlogo.extensions.phys.PhysicsExtension"
-netLogoVersion      := "6.3.0"
-netLogoZipExtras   ++= Seq(baseDirectory.value / "demos")
-
-scalaVersion          := "2.12.6"
-Compile / scalaSource := baseDirectory.value / "src" / "main"
-Test / scalaSource    := baseDirectory.value / "src" / "test"
-scalacOptions        ++= Seq("-deprecation", "-unchecked", "-Xfatal-warnings", "-encoding", "us-ascii", "-release", "11")
+scalaVersion           := "3.7.0"
+Compile / scalaSource  := baseDirectory.value / "src" / "main"
+Test / scalaSource     := baseDirectory.value / "src" / "test"
+scalacOptions          ++= Seq("-deprecation", "-unchecked", "-Xfatal-warnings", "-encoding", "us-ascii", "-release", "17")
 
 libraryDependencies ++= Seq(
   "org.dyn4j" % "dyn4j" % "3.2.4"
 )
+
+netLogoExtName      := "phys"
+netLogoClassManager := "org.nlogo.extensions.phys.PhysicsExtension"
+netLogoVersion      := "7.0.0-beta1"
+netLogoZipExtras    ++= Seq(baseDirectory.value / "demos")

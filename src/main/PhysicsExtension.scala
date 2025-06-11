@@ -32,7 +32,7 @@ class PhysicsExtension extends api.DefaultClassManager {
   var bodiesToPatches: mutable.Map[Body, Patch] = mutable.LinkedHashMap[Body, Patch]()
   var turtlesLastE: mutable.Map[Turtle, Vector2] = mutable.LinkedHashMap[Turtle, Vector2]()
   var turtlesLastV: mutable.Map[Turtle, Vector2] = mutable.LinkedHashMap[Turtle, Vector2]()
-  var collisionSetList: mutable.MutableList[mutable.Set[Body]] = mutable.MutableList[mutable.Set[Body]]()
+  var collisionSetList: mutable.ListBuffer[mutable.Set[Body]] = mutable.ListBuffer[mutable.Set[Body]]()
   var cTime: Long = 0
   var floor: Double = -16.0
   var lastGrav: Vector2 = new Vector2(0.0, 0.0)
@@ -483,22 +483,22 @@ class PhysicsExtension extends api.DefaultClassManager {
 
         val turtle1: Turtle = bodiesToTurtles(body1)
         val turtle2: Turtle = bodiesToTurtles(body2)
-        turtlesCollisionList = turtlesCollisionList + (turtle1 -> turtlesCollisionList.getOrElseUpdate(turtle1, List[Turtle]()).::(turtle2))
-        turtlesCollisionList = turtlesCollisionList + (turtle2 -> turtlesCollisionList.getOrElseUpdate(turtle2, List[Turtle]()).::(turtle1))
+        turtlesCollisionList = turtlesCollisionList.concat(mutable.Map(turtle1 -> turtlesCollisionList.getOrElseUpdate(turtle1, List[Turtle]()).::(turtle2)))
+        turtlesCollisionList = turtlesCollisionList.concat(mutable.Map(turtle2 -> turtlesCollisionList.getOrElseUpdate(turtle2, List[Turtle]()).::(turtle1)))
 
       } else if (bodiesToTurtles.contains(body1) && bodiesToPatches.contains(body2)) {
 
         val turtle: Turtle = bodiesToTurtles(body1)
         val patch: Patch = bodiesToPatches(body2)
-        patchesCollisionList = patchesCollisionList + (turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch))
-        turtlesCollisionListPatches = turtlesCollisionListPatches + (patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle))
+        patchesCollisionList = patchesCollisionList.concat(mutable.Map(turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch)))
+        turtlesCollisionListPatches = turtlesCollisionListPatches.concat(mutable.Map(patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle)))
 
       } else if (bodiesToPatches.contains(body1) && bodiesToTurtles.contains(body2)) {
 
         val patch: Patch = bodiesToPatches(body1)
         val turtle: Turtle = bodiesToTurtles(body2)
-        patchesCollisionList = patchesCollisionList + (turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch))
-        turtlesCollisionListPatches = turtlesCollisionListPatches + (patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle))
+        patchesCollisionList = patchesCollisionList.concat(mutable.Map(turtle -> patchesCollisionList.getOrElseUpdate(turtle, List[Patch]()).::(patch)))
+        turtlesCollisionListPatches = turtlesCollisionListPatches.concat(mutable.Map(patch -> turtlesCollisionListPatches.getOrElseUpdate(patch, List[Turtle]()).::(turtle)))
 
       }
       collisions += 1
@@ -518,53 +518,35 @@ class PhysicsExtension extends api.DefaultClassManager {
 
   }
 
-  object TotalCorrections extends api.Reporter
-  {
+  object TotalCorrections extends api.Reporter {
     override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
-
     override def report(args: Array[Argument], context: Context): AnyRef = {
+      Double.box(numCorrections.toDouble)
+    }
+  }
 
-      Double.box(numCorrections)
+
+  object TotalUncorrectable extends api.Reporter {
+    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
+    override def report(args: Array[Argument], context: Context): AnyRef = {
+      Double.box(numUncorrectable.toDouble)
     }
 
 
   }
 
-
-  object TotalUncorrectable extends api.Reporter
-  {
+  object EnergyDiscrepancy extends api.Reporter {
     override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
-
     override def report(args: Array[Argument], context: Context): AnyRef = {
-
-      Double.box(numUncorrectable)
-    }
-
-
-  }
-
-  object EnergyDiscrepancy extends api.Reporter
-  {
-    override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
-
-    override def report(args: Array[Argument], context: Context): AnyRef = {
-
       Double.box(totalEnergyDiscrepancy)
     }
-
-
   }
 
-  object EnergyDiscrepancies extends api.Reporter
-  {
+  object EnergyDiscrepancies extends api.Reporter {
     override def getSyntax: Syntax = Syntax.reporterSyntax(right = List(), ret = Syntax.NumberType, agentClassString = "O---")
-
     override def report(args: Array[Argument], context: Context): AnyRef = {
-
-      Double.box(numEnergyDiscrepancies)
+      Double.box(numEnergyDiscrepancies.toDouble)
     }
-
-
   }
 
   object GetMLC extends api.Reporter
