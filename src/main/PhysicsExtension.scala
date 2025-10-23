@@ -1,20 +1,17 @@
 package org.nlogo.extensions.phys
 
-import org.nlogo.{ agent, api, core, nvm }
+import org.nlogo.{ agent, api, core }
 import core.Syntax
-import api.ScalaConversions._
-import api.{Argument, Context, ExtensionManager, ScalaConversions}
+import api.{ Argument, Context, ExtensionManager }
 import agent._
 import org.nlogo.core.AgentKind
 import java.lang.StrictMath
 import org.nlogo.api.LogoListBuilder
 
-import org.dyn4j.collision.narrowphase.Penetration
 import org.dyn4j.dynamics
 import org.dyn4j.dynamics._
-import org.dyn4j.dynamics.contact.{ContactAdapter, ContactPoint, SolvedContactPoint}
-import org.dyn4j.dynamics.contact.ContactConstraint
-import org.dyn4j.geometry.{Geometry, Mass, MassType, Vector2}
+import org.dyn4j.dynamics.contact.{ ContactAdapter, ContactPoint, SolvedContactPoint }
+import org.dyn4j.geometry.{ Geometry, Mass, MassType, Vector2 }
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -568,7 +565,7 @@ class PhysicsExtension extends api.DefaultClassManager {
     override def report(args: Array[Argument], context: Context): AnyRef = {
       context.getAgent match {
         case turtle: Turtle => {
-          var turtles: AgentSetBuilder = new AgentSetBuilder(AgentKind.Turtle)
+          val turtles: AgentSetBuilder = new AgentSetBuilder(AgentKind.Turtle)
           if (turtlesCollisionList.contains(turtle)) {
             turtlesCollisionList(turtle).foreach(turtle1 => if (!turtles.contains(turtle1)) {
               turtles.add(turtle1)
@@ -577,7 +574,7 @@ class PhysicsExtension extends api.DefaultClassManager {
           turtles.build()
         }
         case patch: Patch => {
-          var patches: AgentSetBuilder = new AgentSetBuilder(AgentKind.Turtle)
+          val patches: AgentSetBuilder = new AgentSetBuilder(AgentKind.Turtle)
           if (turtlesCollisionListPatches.contains(patch)) {
             turtlesCollisionListPatches(patch).foreach(turtle1 => if (!patches.contains(turtle1)) {
               patches.add(turtle1)
@@ -597,7 +594,7 @@ class PhysicsExtension extends api.DefaultClassManager {
 
 
           val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
-          var patches: AgentSetBuilder = new AgentSetBuilder(AgentKind.Patch)
+          val patches: AgentSetBuilder = new AgentSetBuilder(AgentKind.Patch)
           if (patchesCollisionList.contains(turtle)) {
             patchesCollisionList(turtle).foreach(patch1 => if (!patches.contains(patch1)) {
               patches.add(patch1)
@@ -615,7 +612,7 @@ class PhysicsExtension extends api.DefaultClassManager {
 
     override def report(args: Array[Argument], context: Context): AnyRef = {
       val turtle: Turtle = context.getAgent.asInstanceOf[Turtle]
-      var com: LogoListBuilder = new LogoListBuilder()
+      val com: LogoListBuilder = new LogoListBuilder()
       com.add(Double.box(turtlesToBodies(turtle).getMass.getCenter.x))
       com.add(Double.box(turtlesToBodies(turtle).getMass.getCenter.y))
       com.toLogoList
